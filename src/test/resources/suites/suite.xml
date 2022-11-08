@@ -14,6 +14,6 @@
 		</groups>
 	</test>
 	<packages>
-		<package name="net.absoft"></package>
+		<package name="net.absoft"/>
 	</packages>
 </suite>

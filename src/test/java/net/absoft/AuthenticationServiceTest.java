@@ -5,18 +5,20 @@ import java.util.regex.Pattern;
 
 import net.absoft.data.Response;
 import net.absoft.services.AuthenticationService;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-import org.testng.asserts.SoftAssert;
+import org.testng.annotations.*;
 
 import static org.testng.Assert.*;
 
 public class AuthenticationServiceTest extends BaseTest{
 	
 	private AuthenticationService authenticationService;
+	private String message;
 	
-	@BeforeMethod
+	public AuthenticationServiceTest(String message){
+		this.message = message;
+	}
+	
+	@BeforeClass(groups = "positive")
 	public void setUp() {
 		authenticationService = new AuthenticationService();
 		System.out.println("Setup");
@@ -31,29 +33,33 @@ public class AuthenticationServiceTest extends BaseTest{
 			description = "Successful Authentication Test",
 			groups = "positive"
 	)
-	public void testSuccessfulAuthentication() {
-		Response response = authenticationService.authenticate("user1@test.com", "password1");
+	@Parameters ({"email-address", "password"})
+	public void testSuccessfulAuthentication(@Optional("user1@test.com") String email,@Optional("password1") String password) {
+		Response response = authenticationService.authenticate(email, password);
 		assertEquals(response.getCode(), 200, "Response code should be 200");
 		assertTrue(validateToken(response.getMessage()),
 				"Token should be the 32 digits string. Got: " + response.getMessage());
-		System.out.println("testSuccessfulAuthentication");
+		System.out.println("testSuccessfulAuthentication:" + message);
 	}
 	
+	@DataProvider (name = "invalidLogins")
+	public Object[][] invalidLogins(){
+		return new Object[][]{
+				new Object[]{"user1@test.com" , "wrong_password1", new Response(401, "Invalid email or password")},
+				new Object[]{"" , "password1", new Response(400, "Email should not be empty string")}
+		};
+	}
+
 	@Test(
-			enabled = false,
-			groups = "negative"
+			groups = "negative",
+			dataProvider = "invalidLogins"
 	)
-	public void testAuthenticationWithWrongPassword() {
-		validateErrorResponse(authenticationService.authenticate("user1@test.com", "wrong_password1"), 401,
-				"Invalid email or password");
-		System.out.println("testAuthenticationWithWrongPassword");
-	}
-	
-	private void validateErrorResponse(Response response, int code, String message) {
-		SoftAssert softAssert = new SoftAssert();
-		softAssert.assertEquals(response.getCode(), code, "Response code should be 401");
-		softAssert.assertEquals(response.getMessage(), message,
-				"Response message should be \"Invalid email or password\""); softAssert.assertAll();
+	public void testInvalidAuthentication(String email, String password, Response expectedResponse) {
+		Response actualResponse = authenticationService.authenticate("user1@test.com", "wrong_password1");
+		assertEquals(actualResponse.getCode(), expectedResponse.getCode(), "Response code should be 401");
+		assertEquals(actualResponse.getMessage(), expectedResponse.getMessage(),
+				"Response message should be \"Invalid email or password\"");
+		System.out.println("testInvalidAuthentication");
 	}
 	
 	@Test(
@@ -66,7 +72,7 @@ public class AuthenticationServiceTest extends BaseTest{
 		assertEquals(actualResponse, expectedResponse, "Unexpected response");
 		System.out.println("testAuthenticationWithEmptyEmail");
 	}
-	
+
 	@Test(
 			groups = "negative"
 	)
@@ -76,7 +82,7 @@ public class AuthenticationServiceTest extends BaseTest{
 		assertEquals(response.getMessage(), "Invalid email", "Response message should be \"Invalid email\"");
 		System.out.println("testAuthenticationWithInvalidEmail");
 	}
-	
+
 	@Test(
 			groups = "negative",
 			priority = 2,
@@ -89,7 +95,7 @@ public class AuthenticationServiceTest extends BaseTest{
 				"Response message should be \"Password should not be empty string\"");
 		System.out.println("testAuthenticationWithEmptyPassword");
 	}
-	
+
 	private boolean validateToken(String token) {
 		final Pattern pattern = Pattern.compile("\\S{32}", Pattern.MULTILINE);
 		final Matcher matcher = pattern.matcher(token); return matcher.matches();

@@ -3,15 +3,20 @@
 <suite name="full">
 	
 	<test name="authServiceTest">
+		<parameter name="email-address" value="user1@test.com"></parameter>
+		<parameter name="password" value="password1"></parameter>
 		<groups>
 			<define name="all">
 				<include name="negative" />
 				<include name="positive" />
 			</define>
 			<run>
-				<include name="all" />
+				<include name="positive" />
 			</run>
 		</groups>
+		<classes>
+			<class name="net.absoft.DummyTestFactory"/>
+		</classes>
 	</test>
 	<packages>
 		<package name="net.absoft"/>

@@ -5,30 +5,38 @@ import java.util.regex.Pattern;
 
 import net.absoft.data.Response;
 import net.absoft.services.AuthenticationService;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.testng.asserts.SoftAssert;
 
 import static org.testng.Assert.*;
 
-public class AuthenticationServiceTest {
+public class AuthenticationServiceTest extends BaseTest{
 	
-	public static int count = 0;
+	private AuthenticationService authenticationService;
+	
+	@BeforeMethod
+	public void setUp() {
+		authenticationService = new AuthenticationService();
+		System.out.println("Setup");
+	}
+	
+	@AfterMethod
+	public void tearDown() {
+		System.out.println("TearDown");
+	}
 	
 	@Test(
 			description = "Successful Authentication Test",
-			groups = "positive",
-			invocationCount = 3,
-			successPercentage = 60
+			groups = "positive"
 	)
-	public void testSuccessfulAuthentication()
-			throws InterruptedException {
-		Response response = new AuthenticationService().authenticate("user1@test.com", "password1");
+	public void testSuccessfulAuthentication() {
+		Response response = authenticationService.authenticate("user1@test.com", "password1");
 		assertEquals(response.getCode(), 200, "Response code should be 200");
 		assertTrue(validateToken(response.getMessage()),
 				"Token should be the 32 digits string. Got: " + response.getMessage());
 		System.out.println("testSuccessfulAuthentication");
-		
-		fail("Fail");
 	}
 	
 	@Test(
@@ -36,7 +44,7 @@ public class AuthenticationServiceTest {
 			groups = "negative"
 	)
 	public void testAuthenticationWithWrongPassword() {
-		validateErrorResponse(new AuthenticationService().authenticate("user1@test.com", "wrong_password1"), 401,
+		validateErrorResponse(authenticationService.authenticate("user1@test.com", "wrong_password1"), 401,
 				"Invalid email or password");
 		System.out.println("testAuthenticationWithWrongPassword");
 	}
@@ -50,27 +58,23 @@ public class AuthenticationServiceTest {
 	
 	@Test(
 			priority = 3,
-			groups = "negative",
-			dependsOnMethods = {"testAuthenticationWithEmptyPassword"},
-			alwaysRun = true
+			groups = "negative"
 	)
 	public void testAuthenticationWithEmptyEmail() {
 		Response expectedResponse = new Response(400, "Email should not be empty string");
-		Response actualResponse = new AuthenticationService().authenticate("", "password1");
+		Response actualResponse = authenticationService.authenticate("", "password1");
 		assertEquals(actualResponse, expectedResponse, "Unexpected response");
 		System.out.println("testAuthenticationWithEmptyEmail");
 	}
 	
 	@Test(
-			groups = "negative",
-			timeOut = 2000
+			groups = "negative"
 	)
-	public void testAuthenticationWithInvalidEmail() throws InterruptedException {
-		Response response = new AuthenticationService().authenticate("user1", "password1");
+	public void testAuthenticationWithInvalidEmail() {
+		Response response = authenticationService.authenticate("user1", "password1");
 		assertEquals(response.getCode(), 400, "Response code should be 200");
 		assertEquals(response.getMessage(), "Invalid email", "Response message should be \"Invalid email\"");
 		System.out.println("testAuthenticationWithInvalidEmail");
-		Thread.sleep(3000);
 	}
 	
 	@Test(
@@ -79,7 +83,7 @@ public class AuthenticationServiceTest {
 			dependsOnMethods = {"testAuthenticationWithInvalidEmail"}
 	)
 	public void testAuthenticationWithEmptyPassword() {
-		Response response = new AuthenticationService().authenticate("user1@test", "");
+		Response response = authenticationService.authenticate("user1@test", "");
 		assertEquals(response.getCode(), 400, "Response code should be 400");
 		assertEquals(response.getMessage(), "Password should not be empty string",
 				"Response message should be \"Password should not be empty string\"");

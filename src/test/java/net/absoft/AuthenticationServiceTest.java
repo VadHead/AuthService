@@ -9,12 +9,12 @@ import org.testng.annotations.*;
 
 import static org.testng.Assert.*;
 
-public class AuthenticationServiceTest extends BaseTest{
+public class AuthenticationServiceTest extends BaseTest {
 	
 	private AuthenticationService authenticationService;
 	private String message;
 	
-	public AuthenticationServiceTest(String message){
+	public AuthenticationServiceTest(String message) {
 		this.message = message;
 	}
 	
@@ -33,23 +33,28 @@ public class AuthenticationServiceTest extends BaseTest{
 			description = "Successful Authentication Test",
 			groups = "positive"
 	)
-	@Parameters ({"email-address", "password"})
-	public void testSuccessfulAuthentication(@Optional("user1@test.com") String email,@Optional("password1") String password) {
+	@Parameters({"email-address", "password"})
+	public void testSuccessfulAuthentication(@Optional("user1@test.com") String email,
+			@Optional("password1") String password)
+			throws InterruptedException {
 		Response response = authenticationService.authenticate(email, password);
 		assertEquals(response.getCode(), 200, "Response code should be 200");
 		assertTrue(validateToken(response.getMessage()),
 				"Token should be the 32 digits string. Got: " + response.getMessage());
+		Thread.sleep(2000);
 		System.out.println("testSuccessfulAuthentication:" + message);
 	}
 	
-	@DataProvider (name = "invalidLogins")
-	public Object[][] invalidLogins(){
-		return new Object[][]{
-				new Object[]{"user1@test.com" , "wrong_password1", new Response(401, "Invalid email or password")},
-				new Object[]{"" , "password1", new Response(400, "Email should not be empty string")}
+	@DataProvider(name = "invalidLogins", parallel = true)
+	public Object[][] invalidLogins() {
+		return new Object[][] {
+				new Object[] {"user1@test.com", "wrong_password1", new Response(401, "Invalid email or password")},
+				new Object[] {"", "password1", new Response(400, "Email should not be empty string")},
+				new Object[] {"user1@test.com", "", new Response(400, "Password should not be empty string")},
+				new Object[] {"user1", "password1", new Response(400, "Invalid email")}
 		};
 	}
-
+	
 	@Test(
 			groups = "negative",
 			dataProvider = "invalidLogins"
@@ -72,7 +77,7 @@ public class AuthenticationServiceTest extends BaseTest{
 		assertEquals(actualResponse, expectedResponse, "Unexpected response");
 		System.out.println("testAuthenticationWithEmptyEmail");
 	}
-
+	
 	@Test(
 			groups = "negative"
 	)
@@ -82,7 +87,7 @@ public class AuthenticationServiceTest extends BaseTest{
 		assertEquals(response.getMessage(), "Invalid email", "Response message should be \"Invalid email\"");
 		System.out.println("testAuthenticationWithInvalidEmail");
 	}
-
+	
 	@Test(
 			groups = "negative",
 			priority = 2,
@@ -95,7 +100,7 @@ public class AuthenticationServiceTest extends BaseTest{
 				"Response message should be \"Password should not be empty string\"");
 		System.out.println("testAuthenticationWithEmptyPassword");
 	}
-
+	
 	private boolean validateToken(String token) {
 		final Pattern pattern = Pattern.compile("\\S{32}", Pattern.MULTILINE);
 		final Matcher matcher = pattern.matcher(token); return matcher.matches();

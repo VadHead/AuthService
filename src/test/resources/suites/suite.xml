@@ -1,22 +1,16 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 
-<suite name="full">
+<suite name="full" parallel="methods" thread-count = "3" data-provider-thread-count="3">
 	
 	<test name="authServiceTest">
-		<parameter name="email-address" value="user1@test.com"></parameter>
-		<parameter name="password" value="password1"></parameter>
+		<parameter name="email-address" value="user1@test.com" />
+		<parameter name="password" value="password1" />
 		<groups>
 			<define name="all">
 				<include name="negative" />
 				<include name="positive" />
 			</define>
-			<run>
-				<include name="positive" />
-			</run>
 		</groups>
-		<classes>
-			<class name="net.absoft.DummyTestFactory"/>
-		</classes>
 	</test>
 	<packages>
 		<package name="net.absoft"/>

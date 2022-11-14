@@ -17,6 +17,8 @@ dependencies {
 test {
 	useTestNG(){
 		suites 'src/test/resources/suites/suite.xml'
+		suites 'src/test/resources/suites/suiteNegative.xml'
+		suites 'src/test/resources/suites/suitePositive.xml'
 		useDefaultListeners true
 	}
 }

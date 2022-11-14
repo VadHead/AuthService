@@ -17,5 +17,12 @@ dependencies {
 test {
 	useTestNG(){
 		suites 'src/test/resources/suites/suite.xml'
+		useDefaultListeners true
+	}
+}
+
+task retest(type: Test){
+	useTestNG(){
+		suites 'build/reports/tests/test/testng-failed.xml'
 	}
 }

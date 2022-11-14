@@ -1,5 +1,6 @@
 package net.absoft;
 
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,40 +13,36 @@ import static org.testng.Assert.*;
 public class AuthenticationServiceTest extends BaseTest {
 	
 	private AuthenticationService authenticationService;
-	private String message;
-	
-	public AuthenticationServiceTest(String message) {
-		this.message = message;
-	}
+
 	
 	@BeforeClass(groups = "positive")
 	public void setUp() {
 		authenticationService = new AuthenticationService();
-		System.out.println("Setup");
 	}
 	
-	@AfterMethod
-	public void tearDown() {
-		System.out.println("TearDown");
+	@Test(
+			groups = "positive"
+	)
+	public void testSample() throws InterruptedException {
+		Thread.sleep(2000);
+		System.out.println("testSample:" + new Date());
+		fail("Failing test");
 	}
 	
 	@Test(
 			description = "Successful Authentication Test",
 			groups = "positive"
 	)
-	@Parameters({"email-address", "password"})
-	public void testSuccessfulAuthentication(@Optional("user1@test.com") String email,
-			@Optional("password1") String password)
-			throws InterruptedException {
-		Response response = authenticationService.authenticate(email, password);
+	public void testSuccessfulAuthentication() throws InterruptedException {
+		Response response = authenticationService.authenticate("user1@test.com", "password1");
 		assertEquals(response.getCode(), 200, "Response code should be 200");
 		assertTrue(validateToken(response.getMessage()),
 				"Token should be the 32 digits string. Got: " + response.getMessage());
 		Thread.sleep(2000);
-		System.out.println("testSuccessfulAuthentication:" + message);
+		System.out.println("testSuccessfulAuthentication:" + new Date());
 	}
 	
-	@DataProvider(name = "invalidLogins", parallel = true)
+	@DataProvider(name = "invalidLogins")
 	public Object[][] invalidLogins() {
 		return new Object[][] {
 				new Object[] {"user1@test.com", "wrong_password1", new Response(401, "Invalid email or password")},
@@ -67,39 +64,39 @@ public class AuthenticationServiceTest extends BaseTest {
 		System.out.println("testInvalidAuthentication");
 	}
 	
-	@Test(
-			priority = 3,
-			groups = "negative"
-	)
-	public void testAuthenticationWithEmptyEmail() {
-		Response expectedResponse = new Response(400, "Email should not be empty string");
-		Response actualResponse = authenticationService.authenticate("", "password1");
-		assertEquals(actualResponse, expectedResponse, "Unexpected response");
-		System.out.println("testAuthenticationWithEmptyEmail");
-	}
-	
-	@Test(
-			groups = "negative"
-	)
-	public void testAuthenticationWithInvalidEmail() {
-		Response response = authenticationService.authenticate("user1", "password1");
-		assertEquals(response.getCode(), 400, "Response code should be 200");
-		assertEquals(response.getMessage(), "Invalid email", "Response message should be \"Invalid email\"");
-		System.out.println("testAuthenticationWithInvalidEmail");
-	}
-	
-	@Test(
-			groups = "negative",
-			priority = 2,
-			dependsOnMethods = {"testAuthenticationWithInvalidEmail"}
-	)
-	public void testAuthenticationWithEmptyPassword() {
-		Response response = authenticationService.authenticate("user1@test", "");
-		assertEquals(response.getCode(), 400, "Response code should be 400");
-		assertEquals(response.getMessage(), "Password should not be empty string",
-				"Response message should be \"Password should not be empty string\"");
-		System.out.println("testAuthenticationWithEmptyPassword");
-	}
+//	@Test(
+//			priority = 3,
+//			groups = "negative"
+//	)
+//	public void testAuthenticationWithEmptyEmail() {
+//		Response expectedResponse = new Response(400, "Email should not be empty string");
+//		Response actualResponse = authenticationService.authenticate("", "password1");
+//		assertEquals(actualResponse, expectedResponse, "Unexpected response");
+//		System.out.println("testAuthenticationWithEmptyEmail");
+//	}
+//
+//	@Test(
+//			groups = "negative"
+//	)
+//	public void testAuthenticationWithInvalidEmail() {
+//		Response response = authenticationService.authenticate("user1", "password1");
+//		assertEquals(response.getCode(), 400, "Response code should be 200");
+//		assertEquals(response.getMessage(), "Invalid email", "Response message should be \"Invalid email\"");
+//		System.out.println("testAuthenticationWithInvalidEmail");
+//	}
+//
+//	@Test(
+//			groups = "negative",
+//			priority = 2,
+//			dependsOnMethods = {"testAuthenticationWithInvalidEmail"}
+//	)
+//	public void testAuthenticationWithEmptyPassword() {
+//		Response response = authenticationService.authenticate("user1@test", "");
+//		assertEquals(response.getCode(), 400, "Response code should be 400");
+//		assertEquals(response.getMessage(), "Password should not be empty string",
+//				"Response message should be \"Password should not be empty string\"");
+//		System.out.println("testAuthenticationWithEmptyPassword");
+//	}
 	
 	private boolean validateToken(String token) {
 		final Pattern pattern = Pattern.compile("\\S{32}", Pattern.MULTILINE);
